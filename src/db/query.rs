@@ -1,5 +1,5 @@
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use std::{collections::HashMap, env};
 
 use crate::word::word::Word;
 
@@ -29,10 +29,14 @@ lazy_static! {
         m
     };
 }
+fn get_db_conn() -> Result<Connection> {
+    let db_url = format!("{}/{}", env::var("HOME").unwrap(), ".config/wd/stardict.db");
+    let conn = Connection::open(db_url)?;
+    Ok(conn)
+}
 
 pub fn query(query_word: &str) -> Result<Word> {
-    let conn = Connection::open("stardict.db")?;
-
+    let conn = get_db_conn()?;
     let mut stmt = conn.prepare("SELECT * FROM stardict WHERE word=?1 limit 1")?;
 
     let res = stmt.query_map([query_word], |row| {
@@ -104,7 +108,7 @@ pub fn query(query_word: &str) -> Result<Word> {
 
 #[cfg(test)]
 mod test {
-    use super::query;
+    use super::{get_db_conn, query};
 
     #[test]
     fn test_query() {
@@ -118,5 +122,9 @@ mod test {
         let query_word = "test_not_found";
         let res = query(query_word).unwrap();
         assert_eq!(res.word.len(), 0);
+    }
+    #[test]
+    fn test_get_db_conn() {
+        let _ = get_db_conn();
     }
 }
