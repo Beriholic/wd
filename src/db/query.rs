@@ -106,21 +106,12 @@ pub fn query(query_word: &str) -> Result<Word> {
         
         for item in exchanges.iter() {
             let item = item.split(':').collect::<Vec<&str>>();
-            if item[0].len() != 1 {
-                Err(rusqlite::Error::InvalidParameterName(
-                    "exchange".to_string(),
-                ))?;
-            }
             let first_char = item[0].chars().nth(0).unwrap();
 
             if let Some(v) = FIELD_MAP_CHAR.get(&first_char) {
                 let mut item = item.join(": ");
                 item.replace_range(0..1, v);
                 word.exchanges.push(item);
-            }else{
-                Err(rusqlite::Error::InvalidParameterName(
-                    "exchange".to_string(),
-                ))?;
             }
         }
     }
@@ -151,6 +142,12 @@ mod test {
     #[test]
     fn test_query_done() {
         let query_word = "done";
+        let res = query(query_word).unwrap();
+        assert_ne!(res.word_info.len(), 0);
+    }
+    #[test]
+    fn test_query_buff() {
+        let query_word = "buff";
         let res = query(query_word).unwrap();
         dbg!(&res);
         assert_ne!(res.word_info.len(), 0);
