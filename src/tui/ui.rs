@@ -1,4 +1,4 @@
-use color_eyre::owo_colors::OwoColorize;
+use crate::tui::app::App;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
@@ -6,9 +6,6 @@ use ratatui::{
     widgets::{block, Block, BorderType, Borders, Paragraph},
     Frame,
 };
-use tui_popup::Popup;
-
-use crate::tui::app::App;
 
 use super::app::InputMod;
 
@@ -26,16 +23,42 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
         ])
         .split(f.size());
 
-    draw_block_str(&app.word.word_info, "Word", f, &layout[0]);
+    draw_block_word(&app.word.word_info, f, &layout[0]);
     draw_block_vec(&app.word.translation, "Translation", f, &layout[1]);
     draw_block_vec(&app.word.definition, "Definition", f, &layout[2]);
     draw_block_str(&app.word.tags, "Tag", f, &layout[3]);
     draw_block_vec(&app.word.exchanges, "Exchange", f, &layout[4]);
     draw_input_block(f, &layout[5], app);
     draw_footer(f, &layout[6]);
+}
 
-    // let popup=Popup::new("单词未找到", "Press any key to exit").style(Style::new().white().on_red());
-    // f.render_widget(popup.to_widget(), f.size());
+fn draw_block_word(info: &str, f: &mut Frame, lazyout: &Rect) {
+    let style=match info{
+        "?"=>{
+            Style::default().fg(Color::Red)
+        }
+        _=>{
+            Style::default()
+        }
+    };
+
+    let block=Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .style(style)
+        .title(block::Title::from("Word").alignment(Alignment::Left));
+    
+    let text= match info{
+        "?"=>{
+            Text::from(Line::from(Span::styled("  单词未找到",Style::default().fg(Color::Red))))
+        }
+        _=>{
+            Text::from(Line::from(Span::styled(format!("  {}",info),Style::default().fg(Color::White))))
+        }
+    };
+
+    let p=Paragraph::new(text).block(block);
+    f.render_widget(p,*lazyout);
 }
 fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
     let lines = info
@@ -52,19 +75,19 @@ fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .style(Style::default())
-            .title(block::Title::from(tag).alignment(Alignment::Left)),
+            .title(block::Title::from(tag))
     );
     f.render_widget(p, *layout);
 }
-fn draw_block_str(str: &str, tag: &str, f: &mut Frame, layout: &Rect) {
-    let text = Span::styled(format!("  {}", str), Style::default().fg(Color::White));
-    let text=Text::from(Line::from(text));
+fn draw_block_str(info: &str, tag: &str, f: &mut Frame, layout: &Rect) {
+    let text = Span::styled(format!("  {}", info), Style::default().fg(Color::White));
+    let text = Text::from(Line::from(text));
     let p = Paragraph::new(text).block(
         Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
             .style(Style::default())
-            .title(block::Title::from(tag).alignment(Alignment::Left)),
+            .title(block::Title::from(tag)),
     );
     f.render_widget(p, *layout);
 }
@@ -85,7 +108,7 @@ fn draw_input_block(f: &mut Frame, layout: &Rect, app: &App) {
 }
 fn draw_footer(f: &mut Frame, layout: &Rect) {
     let footer = Paragraph::new("press 'i' to insert | press 'q' or 'esc' to exit")
-        .style(Style::default().fg(Color::LightYellow));
-    
+        .style(Style::default().italic().fg(Color::LightYellow));
+
     f.render_widget(footer, *layout);
 }

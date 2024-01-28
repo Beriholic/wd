@@ -61,11 +61,9 @@ pub fn mock_word() -> Result<Word> {
 }
 pub fn query_word(word_name: &str) -> Result<Word> {
     let mut res = query(word_name)?;
-
-    if res.word_info.len() == 0 {
-        res.word_info = String::from("单词未找到");
+    if res.word_info.len()==0{
+        res.word_info="?".to_string();
     }
-
     Ok(res)
 }
 
