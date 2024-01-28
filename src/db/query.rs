@@ -1,6 +1,7 @@
-use crate::word::word::Word;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
+
+use crate::word::word::Word;
 
 use super::model::DBWord;
 use rusqlite::{Connection, Result};
@@ -48,12 +49,12 @@ pub fn query(query_word: &str) -> Result<Word> {
     let mut db_word = DBWord::new();
 
     for i in res {
-        db_word=i?;
+        db_word = i?;
     }
 
     let mut word = Word::new();
-    
-    if db_word.word.len()==0{
+
+    if db_word.word.len() == 0 {
         return Ok(word);
     }
 
@@ -64,12 +65,12 @@ pub fn query(query_word: &str) -> Result<Word> {
         .split('\n')
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-    word.traslation = db_word
+    word.translation = db_word
         .translation
         .split('\n')
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
-    {
+    if db_word.tag.len() != 0 {
         let mut tags = String::new();
         for tag in db_word.tag.split(' ') {
             tags.push_str(FIELD_MAP.get(tag).unwrap());
@@ -77,8 +78,12 @@ pub fn query(query_word: &str) -> Result<Word> {
         }
         word.tags = tags;
     }
-    {
-        let mut exchange = db_word.exchange.split('/').map(|x| x.to_string()).collect::<Vec<String>>();
+    if db_word.exchange.len() != 0 {
+        let mut exchange = db_word
+            .exchange
+            .split('/')
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
 
         for i in 0..exchange.len() {
             let mut s = exchange[i].clone();
@@ -91,7 +96,7 @@ pub fn query(query_word: &str) -> Result<Word> {
             s.replace_range(0..1, first_char_str);
             exchange[i] = s;
         }
-        
+
         word.exchanges = exchange;
     }
     Ok(word)
@@ -105,13 +110,13 @@ mod test {
     fn test_query() {
         let query_word = "test";
         let res = query(query_word).unwrap();
-        assert_ne!(res.word.len(),0);
+        assert_ne!(res.word.len(), 0);
     }
 
     #[test]
     fn test_query_not_found() {
         let query_word = "test_not_found";
         let res = query(query_word).unwrap();
-        assert_eq!(res.word.len(),0);
+        assert_eq!(res.word.len(), 0);
     }
 }

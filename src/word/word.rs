@@ -1,10 +1,12 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
+
+use crate::db::query::query;
 #[derive(Debug)]
 pub struct Word {
     pub word: String,
     pub phonetic: String,
     pub definition: Vec<String>,
-    pub traslation: Vec<String>,
+    pub translation: Vec<String>,
     pub tags: String,
     pub exchanges: Vec<String>,
 }
@@ -14,7 +16,7 @@ impl Default for Word {
             word: String::new(),
             phonetic: String::new(),
             definition: Vec::new(),
-            traslation: Vec::new(),
+            translation: Vec::new(),
             tags: String::new(),
             exchanges: Vec::new(),
         }
@@ -27,11 +29,15 @@ impl Word {
     }
 }
 
+#[allow(dead_code)]
 pub fn mock_word() -> Result<Word> {
     let mut word = Word::new();
     word.word = "abandon".to_string();
     word.phonetic = "ә'bændәn".to_string();
-    word.tags=format!("{} {} {} {} {} {}","高考","CET4","CET6","托福","GRE","雅思");
+    word.tags = format!(
+        "{} {} {} {} {} {}",
+        "高考", "CET4", "CET6", "托福", "GRE", "雅思"
+    );
 
     word.definition = vec![
         "n. the trait of lacking restraint or control; reckless freedom from inhibition or worry"
@@ -49,7 +55,7 @@ pub fn mock_word() -> Result<Word> {
         "名词复数: abandons".to_string(),
     ];
 
-    word.traslation = vec![
+    word.translation = vec![
         "vt. 放弃, 抛弃, 遗弃, 使屈从, 沉溺, 放纵".to_string(),
         "n. 放任, 无拘束, 狂热".to_string(),
     ];
@@ -57,3 +63,28 @@ pub fn mock_word() -> Result<Word> {
     // Err(anyhow!("get word is failed"))
     Ok(word)
 }
+pub fn query_word(word_name: &str) -> Result<Word> {
+    let mut res = query(word_name)?;
+
+    if res.word.len() == 0 {
+        res.word = String::from("单词未找到");
+    }
+
+    Ok(res)
+}
+
+#[cfg(test)]
+mod test {
+    use super::{mock_word, query_word};
+
+    #[test]
+    fn test_mock_word(){
+        let _=mock_word().expect("mock word is failed");
+    }
+
+    #[test]
+    fn test_query_word(){
+        query_word("hello").expect("query word is failed");
+    }
+}
+
