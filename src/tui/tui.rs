@@ -1,6 +1,6 @@
 use std::io;
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use crossterm::{
     cursor::{Hide, Show},
     event::{self, KeyCode, KeyEventKind},
@@ -36,7 +36,7 @@ impl Tui {
         self.terminal.draw(|f| draw_ui(f, app))?;
         Ok(())
     }
-
+    
     pub fn run(&mut self) -> Result<()> {
         let mut app = App::new();
         loop {
@@ -48,7 +48,7 @@ impl Tui {
                         KeyCode::Char('i') => {
                             app.input_mod = InputMod::Insert;
                         }
-                        KeyCode::Char('q') => {
+                        KeyCode::Char('q') | KeyCode::Esc => {
                             return Ok(());
                         }
                         _ => {}

@@ -57,7 +57,7 @@ impl App {
         self.cursor_pos = 0;
     }
     pub fn submit_query(&mut self) {
-        self.word_name = self.input.clone();
+        self.word_name = self.input.clone().trim().to_string();
         self.input.clear();
         self.reset_cursor();
     }

@@ -1,10 +1,12 @@
+use color_eyre::owo_colors::OwoColorize;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    style::{Color, Style, Stylize},
     text::{Line, Span, Text},
     widgets::{block, Block, BorderType, Borders, Paragraph},
     Frame,
 };
+use tui_popup::Popup;
 
 use crate::tui::app::App;
 
@@ -20,20 +22,20 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
             Constraint::Percentage(7),
             Constraint::Percentage(20),
             Constraint::Length(3),
+            Constraint::Length(3),
         ])
         .split(f.size());
 
-    draw_block_str(
-        &format!("{} [{}]", &app.word.word, &app.word.phonetic),
-        "Word",
-        f,
-        &layout[0],
-    );
+    draw_block_str(&app.word.word_info, "Word", f, &layout[0]);
     draw_block_vec(&app.word.translation, "Translation", f, &layout[1]);
     draw_block_vec(&app.word.definition, "Definition", f, &layout[2]);
     draw_block_str(&app.word.tags, "Tag", f, &layout[3]);
     draw_block_vec(&app.word.exchanges, "Exchange", f, &layout[4]);
     draw_input_block(f, &layout[5], app);
+    draw_footer(f, &layout[6]);
+
+    // let popup=Popup::new("单词未找到", "Press any key to exit").style(Style::new().white().on_red());
+    // f.render_widget(popup.to_widget(), f.size());
 }
 fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
     let lines = info
@@ -55,9 +57,8 @@ fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
     f.render_widget(p, *layout);
 }
 fn draw_block_str(str: &str, tag: &str, f: &mut Frame, layout: &Rect) {
-    let span = Span::styled(format!("  {}", str), Style::default().fg(Color::White));
-    let line = Line::from(span);
-    let text = Text::from(line);
+    let text = Span::styled(format!("  {}", str), Style::default().fg(Color::White));
+    let text=Text::from(Line::from(text));
     let p = Paragraph::new(text).block(
         Block::default()
             .borders(Borders::ALL)
@@ -81,4 +82,10 @@ fn draw_input_block(f: &mut Frame, layout: &Rect, app: &App) {
         InputMod::Normal => {}
         InputMod::Insert => f.set_cursor(layout.x + app.cursor_pos as u16 + 1, layout.y + 1),
     }
+}
+fn draw_footer(f: &mut Frame, layout: &Rect) {
+    let footer = Paragraph::new("press 'i' to insert | press 'q' or 'esc' to exit")
+        .style(Style::default().fg(Color::LightYellow));
+    
+    f.render_widget(footer, *layout);
 }
