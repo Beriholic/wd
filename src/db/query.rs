@@ -66,8 +66,13 @@ pub fn query(query_word: &str) -> Result<Word> {
         return Ok(word);
     }
 
-    word.word = db_word.word.to_string();
-    word.phonetic = db_word.phonetic.to_string();
+    word.word_info=match db_word.word.len(){
+        0 => word.word_info,
+        _ => match db_word.phonetic.len(){
+            0 => db_word.word,
+            _=> format!("{} [{}]",db_word.word,db_word.phonetic),
+        }
+    };
     word.definition = db_word
         .definition
         .split('\n')
@@ -130,14 +135,14 @@ mod test {
     fn test_query() {
         let query_word = "test";
         let res = query(query_word).unwrap();
-        assert_ne!(res.word.len(), 0);
+        assert_ne!(res.word_info.len(), 0);
     }
 
     #[test]
     fn test_query_not_found() {
         let query_word = "test_not_found";
         let res = query(query_word).unwrap();
-        assert_eq!(res.word.len(), 0);
+        assert_eq!(res.word_info.len(), 0);
     }
     #[test]
     fn test_get_db_conn() {
@@ -148,6 +153,6 @@ mod test {
         let query_word = "done";
         let res = query(query_word).unwrap();
         dbg!(&res);
-        assert_ne!(res.word.len(), 0);
+        assert_ne!(res.word_info.len(), 0);
     }
 }
