@@ -1,10 +1,9 @@
-use anyhow::Result;
+use color_eyre::eyre::Result;
 
 use crate::db::query::query;
 #[derive(Debug)]
 pub struct Word {
-    pub word: String,
-    pub phonetic: String,
+    pub word_info: String,
     pub definition: Vec<String>,
     pub translation: Vec<String>,
     pub tags: String,
@@ -13,8 +12,7 @@ pub struct Word {
 impl Default for Word {
     fn default() -> Self {
         Word {
-            word: String::new(),
-            phonetic: String::new(),
+            word_info: String::new(),
             definition: Vec::new(),
             translation: Vec::new(),
             tags: String::new(),
@@ -32,8 +30,7 @@ impl Word {
 #[allow(dead_code)]
 pub fn mock_word() -> Result<Word> {
     let mut word = Word::new();
-    word.word = "abandon".to_string();
-    word.phonetic = "ә'bændәn".to_string();
+    word.word_info = format!("{} [{}]", "abandon", "ә'bændәn");
     word.tags = format!(
         "{} {} {} {} {} {}",
         "高考", "CET4", "CET6", "托福", "GRE", "雅思"
@@ -60,16 +57,13 @@ pub fn mock_word() -> Result<Word> {
         "n. 放任, 无拘束, 狂热".to_string(),
     ];
 
-    // Err(anyhow!("get word is failed"))
     Ok(word)
 }
 pub fn query_word(word_name: &str) -> Result<Word> {
     let mut res = query(word_name)?;
-
-    if res.word.len() == 0 {
-        res.word = String::from("单词未找到");
+    if res.word_info.len()==0{
+        res.word_info="?".to_string();
     }
-
     Ok(res)
 }
 
@@ -78,13 +72,12 @@ mod test {
     use super::{mock_word, query_word};
 
     #[test]
-    fn test_mock_word(){
-        let _=mock_word().expect("mock word is failed");
+    fn test_mock_word() {
+        let _ = mock_word().expect("mock word is failed");
     }
 
     #[test]
-    fn test_query_word(){
+    fn test_query_word() {
         query_word("hello").expect("query word is failed");
     }
 }
-

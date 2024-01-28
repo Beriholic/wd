@@ -11,6 +11,7 @@ A tui program for Chinese and English offline dictionaries in the terminal
 
 ---
 ##TODO
+- [ ] Handling text overflow
 - [ ] Using Dynamic Layout
 - [ ] colorful
 - [ ] .....

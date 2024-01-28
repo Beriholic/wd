@@ -7,16 +7,8 @@ use super::model::DBWord;
 use rusqlite::{Connection, Result};
 
 lazy_static! {
-    static ref FIELD_MAP: HashMap<&'static str, &'static str> = {
+    static ref FIELD_MAP_STR: HashMap<&'static str, &'static str> = {
         let mut m = HashMap::new();
-        m.insert("p", "过去式");
-        m.insert("d", "过去分词");
-        m.insert("i", "现在分词");
-        m.insert("3", "第三人称单数");
-        m.insert("r", "比较级");
-        m.insert("t", "最高级");
-        m.insert("s", "名词复数");
-
         m.insert("zk", "中考");
         m.insert("gk", "高考");
         m.insert("ky", "考研");
@@ -26,6 +18,18 @@ lazy_static! {
         m.insert("ielts", "雅思");
         m.insert("gre", "GRE");
 
+        m
+    };
+    static ref FIELD_MAP_CHAR: HashMap<char, &'static str> = {
+        let mut m = HashMap::new();
+        m.insert('p', "过去式");
+        m.insert('d', "过去分词");
+        m.insert('i', "现在分词");
+        m.insert('3', "第三人称单数");
+        m.insert('r', "比较级");
+        m.insert('t', "最高级");
+        m.insert('s', "名词复数");
+        m.insert('0', "原型");
         m
     };
 }
@@ -62,8 +66,13 @@ pub fn query(query_word: &str) -> Result<Word> {
         return Ok(word);
     }
 
-    word.word = db_word.word.to_string();
-    word.phonetic = db_word.phonetic.to_string();
+    word.word_info=match db_word.word.len(){
+        0 => word.word_info,
+        _ => match db_word.phonetic.len(){
+            0 => db_word.word,
+            _=> format!("{} [{}]",db_word.word,db_word.phonetic),
+        }
+    };
     word.definition = db_word
         .definition
         .split('\n')
@@ -75,33 +84,36 @@ pub fn query(query_word: &str) -> Result<Word> {
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
     if db_word.tag.len() != 0 {
-        let mut tags = String::new();
-        for tag in db_word.tag.split(' ') {
-            tags.push_str(FIELD_MAP.get(tag).unwrap());
-            tags.push_str(" ");
+        let db_word_tag=db_word.tag.split_whitespace().collect::<Vec<&str>>();
+        let mut tags=Vec::new();
+
+        for item in db_word_tag.iter() {
+            if let Some(v) = FIELD_MAP_STR.get(item) {
+                tags.push(v.to_string());
+            }
         }
-        word.tags = tags;
+        
+        word.tags=tags.join(", ");
+        
     }
     if db_word.exchange.len() != 0 {
-        let mut exchange = db_word
+        let exchanges = db_word
             .exchange
             .split('/')
+            .filter(|x| x.chars().nth(0).unwrap() != '1')
             .map(|x| x.to_string())
             .collect::<Vec<String>>();
+        
+        for item in exchanges.iter() {
+            let item = item.split(':').collect::<Vec<&str>>();
+            let first_char = item[0].chars().nth(0).unwrap();
 
-        for i in 0..exchange.len() {
-            let mut s = exchange[i].clone();
-            let mut chars = s.chars();
-            let first_char = chars.next().unwrap();
-            let mut first_char_str = String::new();
-            first_char_str.push(first_char);
-            let first_char_str = first_char_str.as_str();
-            let first_char_str = FIELD_MAP.get(first_char_str).unwrap();
-            s.replace_range(0..1, first_char_str);
-            exchange[i] = s;
+            if let Some(v) = FIELD_MAP_CHAR.get(&first_char) {
+                let mut item = item.join(": ");
+                item.replace_range(0..1, v);
+                word.exchanges.push(item);
+            }
         }
-
-        word.exchanges = exchange;
     }
     Ok(word)
 }
@@ -114,17 +126,30 @@ mod test {
     fn test_query() {
         let query_word = "test";
         let res = query(query_word).unwrap();
-        assert_ne!(res.word.len(), 0);
+        assert_ne!(res.word_info.len(), 0);
     }
 
     #[test]
     fn test_query_not_found() {
         let query_word = "test_not_found";
         let res = query(query_word).unwrap();
-        assert_eq!(res.word.len(), 0);
+        assert_eq!(res.word_info.len(), 0);
     }
     #[test]
     fn test_get_db_conn() {
         let _ = get_db_conn();
+    }
+    #[test]
+    fn test_query_done() {
+        let query_word = "done";
+        let res = query(query_word).unwrap();
+        assert_ne!(res.word_info.len(), 0);
+    }
+    #[test]
+    fn test_query_buff() {
+        let query_word = "buff";
+        let res = query(query_word).unwrap();
+        dbg!(&res);
+        assert_ne!(res.word_info.len(), 0);
     }
 }
