@@ -2,6 +2,12 @@
 A tui program for Chinese and English offline dictionaries in the terminal
 ![screenshot](./assert/screenshot.png)
 
+# install
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Beriholic/wd/main/install.sh)"
+```
+
 //TODO
 
 # Credits
