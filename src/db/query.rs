@@ -45,15 +45,34 @@ pub fn query(query_word: &str) -> Result<Word> {
 
     let res = stmt.query_map([query_word], |row| {
         Ok(DBWord {
-            word: row.get(1)?,
-            phonetic: row.get(3)?,
-            definition: row.get(4)?,
-            translation: row.get(5)?,
-            tag: row.get(9)?,
-            exchange: row.get(12)?,
+            word: match row.get(1) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
+            phonetic: match row.get(3) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
+            definition: match row.get(4) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
+            translation: match row.get(5) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
+            // translation: row.get(5)?,
+            tag: match row.get(9) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
+            exchange: match row.get(12) {
+                Err(_) => "".to_string(),
+                Ok(res) => res,
+            },
         })
     })?;
-
+    
     let mut db_word = DBWord::new();
 
     for i in res {
@@ -66,35 +85,38 @@ pub fn query(query_word: &str) -> Result<Word> {
         return Ok(word);
     }
 
-    word.word_info=match db_word.word.len(){
+    word.word_info = match db_word.word.len() {
         0 => word.word_info,
-        _ => match db_word.phonetic.len(){
+        _ => match db_word.phonetic.len() {
             0 => db_word.word,
-            _=> format!("{} [{}]",db_word.word,db_word.phonetic),
-        }
+            _ => format!("{} [{}]", db_word.word, db_word.phonetic),
+        },
     };
-    word.definition = db_word
-        .definition
-        .split('\n')
-        .map(|x| x.to_string())
-        .collect::<Vec<String>>();
-    word.translation = db_word
-        .translation
-        .split('\n')
-        .map(|x| x.to_string())
-        .collect::<Vec<String>>();
+    if db_word.definition.len() != 0 {
+        word.definition = db_word
+            .definition
+            .split('\n')
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+    }
+    if db_word.translation.len() != 0 {
+        word.translation = db_word
+            .translation
+            .split('\n')
+            .map(|x| x.to_string())
+            .collect::<Vec<String>>();
+    }
     if db_word.tag.len() != 0 {
-        let db_word_tag=db_word.tag.split_whitespace().collect::<Vec<&str>>();
-        let mut tags=Vec::new();
+        let db_word_tag = db_word.tag.split_whitespace().collect::<Vec<&str>>();
+        let mut tags = Vec::new();
 
         for item in db_word_tag.iter() {
             if let Some(v) = FIELD_MAP_STR.get(item) {
                 tags.push(v.to_string());
             }
         }
-        
-        word.tags=tags.join(", ");
-        
+
+        word.tags = tags.join(", ");
     }
     if db_word.exchange.len() != 0 {
         let exchanges = db_word
@@ -103,7 +125,7 @@ pub fn query(query_word: &str) -> Result<Word> {
             .filter(|x| x.chars().nth(0).unwrap() != '1')
             .map(|x| x.to_string())
             .collect::<Vec<String>>();
-        
+
         for item in exchanges.iter() {
             let item = item.split(':').collect::<Vec<&str>>();
             let first_char = item[0].chars().nth(0).unwrap();
