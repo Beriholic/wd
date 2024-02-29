@@ -6,6 +6,12 @@ if ! command -v cargo &>/dev/null; then
     exit
 fi
 
+if ! command -v unzip &>/dev/null; then
+    echo "请先安装unzip"
+    exit
+fi
+
+DICT_URL=https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-sqlite-28.zip
 DIR=$HOME/.config/wd
 mkdir -p $DIR
 
@@ -13,7 +19,7 @@ donwload_database() {
     echo "正在下载离线词典数据库"
     # echo "Downloading the offline dictionary database"
 
-    curl -LjO https://github.com/Beriholic/wd/releases/download/v0.1.1/stardict.zip --output $DIR/stardict.zip
+    curl -LjO $DICT_URL --output $DIR/stardict.zip
     echo "正在解压离线词典数据库"
     # echo "Unzipping the offline dictionary database"
     unzip ./stardict.zip
