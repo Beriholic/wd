@@ -1,2 +1,3 @@
-pub mod model;
+mod init;
+pub mod models;
 pub mod query;

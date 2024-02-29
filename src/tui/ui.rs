@@ -1,4 +1,4 @@
-use crate::tui::app::App;
+use crate::{db::models::Word, tui::app::App};
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Style, Stylize},
@@ -23,20 +23,35 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
         ])
         .split(f.size());
 
-    draw_block_word(&app.word.word_info, f, &layout[0]);
-    draw_block_vec(&app.word.translation, "Translation", f, &layout[1]);
-    draw_block_vec(&app.word.definition, "Definition", f, &layout[2]);
-    draw_block_str(&app.word.tags, "Tag", f, &layout[3]);
-    draw_block_vec(&app.word.exchanges, "Exchange", f, &layout[4]);
+    let binding = Word::new();
+    let word = match app.word.as_ref() {
+        Some(word) => word,
+        None => &binding,
+    };
+
+    draw_block_word(word.word_info.clone(), f, &layout[0]);
+    draw_block_vec(word.translation.clone(), "Translation", f, &layout[1]);
+    draw_block_vec(word.definition.clone(), "Definition", f, &layout[2]);
+    draw_block_str(word.tags.clone(), "Tag", f, &layout[4]);
+    draw_block_vec(word.exchanges.clone(), "Exchange", f, &layout[4]);
     draw_input_block(f, &layout[5], app);
     draw_footer(f, &layout[6]);
 }
 
-fn draw_block_word(info: &str, f: &mut Frame, lazyout: &Rect) {
+fn draw_block_word(info: Option<String>, f: &mut Frame, lazyout: &Rect) {
+    // let info = match info {
+    //     Some(info) => info,
+    //     None => "".to_owned(),
+    // };
     let style = match info {
-        "?" => Style::default().fg(Color::Red),
+        None => Style::default().fg(Color::Red),
         _ => Style::default(),
     };
+
+    // let style = match info {
+    //     // "?" => Style::default().fg(Color::Red),
+    //     _ => Style::default(),
+    // };
 
     let block = Block::default()
         .borders(Borders::ALL)
@@ -45,12 +60,12 @@ fn draw_block_word(info: &str, f: &mut Frame, lazyout: &Rect) {
         .title(block::Title::from("Word").alignment(Alignment::Left));
 
     let text = match info {
-        "?" => Text::from(Line::from(Span::styled(
+        None => Text::from(Line::from(Span::styled(
             "  单词未找到",
             Style::default().fg(Color::Red),
         ))),
         _ => Text::from(Line::from(Span::styled(
-            format!("  {}", info),
+            format!("  {}", info.unwrap_or_default()),
             Style::default().fg(Color::White),
         ))),
     };
@@ -58,8 +73,10 @@ fn draw_block_word(info: &str, f: &mut Frame, lazyout: &Rect) {
     let p = Paragraph::new(text).wrap(Wrap { trim: true }).block(block);
     f.render_widget(p, *lazyout);
 }
-fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
+
+fn draw_block_vec(info: Option<Vec<String>>, tag: &str, f: &mut Frame, layout: &Rect) {
     let lines = info
+        .unwrap_or_default()
         .iter()
         .map(|item| {
             let span = Span::styled(format!("  {}", item), Style::default().fg(Color::White));
@@ -78,8 +95,11 @@ fn draw_block_vec(info: &Vec<String>, tag: &str, f: &mut Frame, layout: &Rect) {
 
     f.render_widget(p, *layout);
 }
-fn draw_block_str(info: &str, tag: &str, f: &mut Frame, layout: &Rect) {
-    let text = Span::styled(format!("  {}", info), Style::default().fg(Color::White));
+fn draw_block_str(info: Option<String>, tag: &str, f: &mut Frame, layout: &Rect) {
+    let text = Span::styled(
+        format!("  {}", info.unwrap_or_default()),
+        Style::default().fg(Color::White),
+    );
     let text = Text::from(Line::from(text));
     let p = Paragraph::new(text).wrap(Wrap { trim: true }).block(
         Block::default()
