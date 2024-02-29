@@ -6,6 +6,7 @@ use crossterm::{
     event::{self, KeyCode, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
+use tokio::runtime::Runtime;
 
 use crate::tui::app::App;
 
@@ -36,7 +37,7 @@ impl Tui {
         self.terminal.draw(|f| draw_ui(f, app))?;
         Ok(())
     }
-    
+
     pub fn run(&mut self) -> Result<()> {
         let mut app = App::new();
         loop {
@@ -57,7 +58,9 @@ impl Tui {
                         KeyCode::Enter => {
                             app.input_mod = InputMod::Normal;
                             app.submit_query();
-                            app.search();
+                            let runtime = Runtime::new().unwrap();
+                            runtime.block_on(app.search());
+                            // app.search();
                         }
                         KeyCode::Char(to_insert) => {
                             app.enter_char(to_insert);

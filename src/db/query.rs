@@ -1,10 +1,87 @@
+use std::collections::HashMap;
+
+use color_eyre::eyre::Result;
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+
+use crate::entity::stardict::{Entity as DbWord, Model};
+use crate::{db::init::db_connect, entity::stardict};
 use lazy_static::lazy_static;
-use std::{collections::HashMap, env};
 
-use crate::word::word::Word;
+use super::models;
 
-use super::model::DBWord;
-use rusqlite::{Connection, Result};
+pub async fn query_word(qword: &str) -> Result<Option<models::Word>> {
+    let db = db_connect().await?;
+
+    let db_word = DbWord::find()
+        .filter(stardict::Column::Word.eq(qword))
+        .one(&db)
+        .await?;
+
+    return match db_word {
+        Some(db_word) => Ok(Some(dbword_convert_word(db_word).await)), // Wrap the struct Word inside Some variant
+        None => Ok(None),
+    };
+}
+
+pub async fn dbword_convert_word(db_word: Model) -> models::Word {
+    let mut word = models::Word::new();
+
+    word.word_info = Some(format!(
+        "{} [{}]",
+        db_word.word,
+        db_word.phonetic.unwrap_or_default()
+    ));
+
+    word.definition = Some(
+        db_word
+            .definition
+            .unwrap_or_default()
+            .split("\n")
+            .map(|x| x.to_owned())
+            .collect::<Vec<String>>(),
+    );
+
+    word.translation = Some(
+        db_word
+            .translation
+            .unwrap_or_default()
+            .split("\n")
+            .map(|x| x.to_owned())
+            .collect::<Vec<String>>(),
+    );
+
+    word.tags = Some(
+        db_word
+            .tag
+            .unwrap_or_default()
+            .split_whitespace()
+            .map(|x| FIELD_MAP_STR.get(x).expect("filed not found").to_string())
+            .collect::<Vec<String>>()
+            .join(", "),
+    );
+    word.exchanges = Some(
+        db_word
+            .exchange
+            .unwrap_or_default()
+            .split('/')
+            .filter(|&x| x.chars().nth(0) != Some('1'))
+            .map(|x| {
+                let item = x.split(':').collect::<Vec<&str>>();
+                let first_char = item.get(0).map(|s| s.chars().nth(0)).flatten();
+
+                first_char.and_then(|c| {
+                    FIELD_MAP_CHAR.get(&c).map(|v| {
+                        let mut item = item.join(": ");
+                        item.replace_range(0..1, v);
+                        item
+                    })
+                })
+            })
+            .filter_map(|item| item)
+            .collect::<Vec<String>>(),
+    );
+    word
+}
 
 lazy_static! {
     static ref FIELD_MAP_STR: HashMap<&'static str, &'static str> = {
@@ -33,145 +110,33 @@ lazy_static! {
         m
     };
 }
-fn get_db_conn() -> Result<Connection> {
-    let db_url = format!("{}/{}", env::var("HOME").unwrap(), ".config/wd/stardict.db");
-    let conn = Connection::open(db_url)?;
-    Ok(conn)
-}
 
-pub fn query(query_word: &str) -> Result<Word> {
-    let conn = get_db_conn()?;
-    let mut stmt = conn.prepare("SELECT * FROM stardict WHERE word=?1 limit 1")?;
+#[tokio::test]
+async fn test_query_word() {
+    let qword = "ard";
+    let word = query_word(qword).await.expect("query_word failed");
 
-    let res = stmt.query_map([query_word], |row| {
-        Ok(DBWord {
-            word: match row.get(1) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-            phonetic: match row.get(3) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-            definition: match row.get(4) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-            translation: match row.get(5) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-            // translation: row.get(5)?,
-            tag: match row.get(9) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-            exchange: match row.get(12) {
-                Err(_) => "".to_string(),
-                Ok(res) => res,
-            },
-        })
-    })?;
-    
-    let mut db_word = DBWord::new();
-
-    for i in res {
-        db_word = i?;
-    }
-
-    let mut word = Word::new();
-
-    if db_word.word.len() == 0 {
-        return Ok(word);
-    }
-
-    word.word_info = match db_word.word.len() {
-        0 => word.word_info,
-        _ => match db_word.phonetic.len() {
-            0 => db_word.word,
-            _ => format!("{} [{}]", db_word.word, db_word.phonetic),
-        },
-    };
-    if db_word.definition.len() != 0 {
-        word.definition = db_word
-            .definition
-            .split('\n')
-            .map(|x| x.to_string())
-            .collect::<Vec<String>>();
-    }
-    if db_word.translation.len() != 0 {
-        word.translation = db_word
-            .translation
-            .split('\n')
-            .map(|x| x.to_string())
-            .collect::<Vec<String>>();
-    }
-    if db_word.tag.len() != 0 {
-        let db_word_tag = db_word.tag.split_whitespace().collect::<Vec<&str>>();
-        let mut tags = Vec::new();
-
-        for item in db_word_tag.iter() {
-            if let Some(v) = FIELD_MAP_STR.get(item) {
-                tags.push(v.to_string());
-            }
+    match word {
+        Some(word) => {
+            eprintln!("{:#?}", word);
         }
-
-        word.tags = tags.join(", ");
-    }
-    if db_word.exchange.len() != 0 {
-        let exchanges = db_word
-            .exchange
-            .split('/')
-            .filter(|x| x.chars().nth(0).unwrap() != '1')
-            .map(|x| x.to_string())
-            .collect::<Vec<String>>();
-
-        for item in exchanges.iter() {
-            let item = item.split(':').collect::<Vec<&str>>();
-            let first_char = item[0].chars().nth(0).unwrap();
-
-            if let Some(v) = FIELD_MAP_CHAR.get(&first_char) {
-                let mut item = item.join(": ");
-                item.replace_range(0..1, v);
-                word.exchanges.push(item);
-            }
+        None => {
+            eprintln!("word not found");
         }
     }
-    Ok(word)
 }
 
-#[cfg(test)]
-mod test {
-    use super::{get_db_conn, query};
+#[tokio::test]
+async fn test_query_word_not_found() {
+    let qword = "rusttttttttt";
+    let word = query_word(qword).await.expect("query_word failed");
 
-    #[test]
-    fn test_query() {
-        let query_word = "test";
-        let res = query(query_word).unwrap();
-        assert_ne!(res.word_info.len(), 0);
-    }
-
-    #[test]
-    fn test_query_not_found() {
-        let query_word = "test_not_found";
-        let res = query(query_word).unwrap();
-        assert_eq!(res.word_info.len(), 0);
-    }
-    #[test]
-    fn test_get_db_conn() {
-        let _ = get_db_conn();
-    }
-    #[test]
-    fn test_query_done() {
-        let query_word = "done";
-        let res = query(query_word).unwrap();
-        assert_ne!(res.word_info.len(), 0);
-    }
-    #[test]
-    fn test_query_buff() {
-        let query_word = "buff";
-        let res = query(query_word).unwrap();
-        dbg!(&res);
-        assert_ne!(res.word_info.len(), 0);
+    match word {
+        Some(word) => {
+            eprintln!("{:#?}", word);
+        }
+        None => {
+            eprintln!("word not found");
+        }
     }
 }

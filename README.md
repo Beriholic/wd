@@ -8,7 +8,6 @@ A tui program for Chinese and English offline dictionaries in the terminal
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/Beriholic/wd/main/install.sh)"
 ```
 
-//TODO
 
 # Credits
 - Thanks to [ECDICT](https://github.com/skywind3000/ECDICT) for such a powerful dictionary!
@@ -20,4 +19,3 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Beriholic/wd/main/instal
 - [ ] Handling text overflow
 - [ ] Using Dynamic Layout
 - [ ] colorful
-- [ ] .....
