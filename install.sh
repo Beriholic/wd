@@ -11,7 +11,12 @@ if ! command -v unzip &>/dev/null; then
     exit
 fi
 
-DICT_URL=https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-sqlite-28.zip
+if ! command -v curl &>/dev/null; then
+    echo "请先安装curl"
+    exit
+fi
+
+DICT_URL=https://github.com/Beriholic/wd/releases/download/v0.1.1/stardict.zip
 DIR=$HOME/.config/wd
 mkdir -p $DIR
 
