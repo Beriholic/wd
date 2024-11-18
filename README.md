@@ -11,11 +11,3 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/Beriholic/wd/main/instal
 
 # Credits
 - Thanks to [ECDICT](https://github.com/skywind3000/ECDICT) for such a powerful dictionary!
-
-
-
----
-##TODO
-- [ ] Handling text overflow
-- [ ] Using Dynamic Layout
-- [ ] colorful
