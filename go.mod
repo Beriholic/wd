@@ -1,4 +1,4 @@
-module github.com/beriholic/wd
+module github.com/Beriholic/wd
 
 go 1.23.2
 

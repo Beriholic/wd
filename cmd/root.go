@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/beriholic/wd/repo"
-	"github.com/beriholic/wd/ui"
+	"github.com/Beriholic/wd/repo"
+	"github.com/Beriholic/wd/ui"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )

@@ -3,8 +3,8 @@ package ui
 import (
 	"strings"
 
-	"github.com/beriholic/wd/repo"
-	"github.com/beriholic/wd/repo/model"
+	"github.com/Beriholic/wd/repo"
+	"github.com/Beriholic/wd/repo/model"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"

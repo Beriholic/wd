@@ -1,6 +1,6 @@
 package repo
 
-import "github.com/beriholic/wd/repo/model"
+import "github.com/Beriholic/wd/repo/model"
 
 func MockQuery() (*model.Stardict, error) {
 	return QueryWord("rust")
