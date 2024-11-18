@@ -1,17 +1,18 @@
 package repo
 
 import (
+	"log"
+	"os"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
-	"os"
 )
 
 var DB *gorm.DB
 
 func InitDB() {
-	dbPath := os.Getenv("HOME") + "/.config/wd/stardict.db"
+	dbPath := os.Getenv("HOME") + "/.local/share/wd/stardict.db"
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})

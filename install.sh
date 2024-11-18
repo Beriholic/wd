@@ -1,8 +1,6 @@
 #!/bin/bash
-if ! command -v cargo &>/dev/null; then
-    echo "请先安装rust"
-    echo "安装可参考 Ahttps://www.rust-lang.org/zh-CN/tools/install 进行安装"
-    # echo "Please install rust first"
+if ! command -v go &>/dev/null; then
+    echo "请先安装go"
     exit
 fi
 
@@ -17,7 +15,7 @@ if ! command -v curl &>/dev/null; then
 fi
 
 DICT_URL=https://github.com/Beriholic/wd/releases/download/v0.1.1/stardict.zip
-DIR=$HOME/.config/wd
+DIR=$HOME/.local/share/wd
 mkdir -p $DIR
 
 donwload_database() {
@@ -48,6 +46,7 @@ fi
 
 echo "正在安装wd"
 echo "Installing wd"
-cargo install --git https://github.com/Beriholic/wd.git
+
+go install github.com/Beriholic/wd@latest
 
 echo "安装完成"
