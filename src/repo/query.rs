@@ -6,11 +6,9 @@ use sqlx::query_as;
 pub async fn query_word(name: &str) -> Result<Word> {
     let db = get_db_connection().await?;
 
-    let db_word = query_as!(
-        Stardict,
+    let db_word: Stardict = query_as(
         "SELECT * FROM stardict WHERE word == $1",
-        name
-    ).fetch_one(&db).await?;
+    ).bind(name).fetch_one(&db).await?;
 
     db.close().await;
     Ok(db_word.into())
