@@ -47,6 +47,9 @@ fi
 echo "正在安装wd"
 echo "Installing wd"
 
-go install github.com/Beriholic/wd@latest
+cargo install --git https://github.com/Beriholic/wd.git
 
-echo "安装完成"
+if [ $? -eq 0 ]; then
+    echo "安装成功"
+else
+    echo "安装失败"
