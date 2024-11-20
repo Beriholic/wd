@@ -1,5 +1,6 @@
 use crate::app::InputMode::Normal;
-use crate::repo::model::{Stardict, Word};
+use crate::repo::model::Word;
+use crate::repo::query::query_word;
 use crate::ui;
 use color_eyre::Result;
 use crossterm::event;
@@ -25,16 +26,16 @@ impl App {
         Self {
             word: None,
             word_input: String::new(),
-            input_mode: InputMode::Normal,
+            input_mode: Normal,
             input_cursor_pos: 0,
             exit: false,
         }
     }
 
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+    pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events()?;
+            self.handle_events().await?;
         }
         Ok(())
     }
@@ -48,7 +49,7 @@ impl App {
 
     fn enter_insert_mode(&mut self) {
         match self.input_mode {
-            InputMode::Normal => {
+            Normal => {
                 self.input_mode = InputMode::Insert;
             }
             _ => {}
@@ -57,7 +58,7 @@ impl App {
     fn enter_normal_mode(&mut self) {
         match self.input_mode {
             InputMode::Insert => {
-                self.input_mode = InputMode::Normal;
+                self.input_mode = Normal;
             }
             _ => {}
         }
@@ -115,11 +116,11 @@ impl App {
     }
 
 
-    fn handle_events(&mut self) -> Result<()> {
+    async fn handle_events(&mut self) -> Result<()> {
         // match event::read()? {
         if let event::Event::Key(key) = event::read()? {
             match self.input_mode {
-                InputMode::Normal => match key.code {
+                Normal => match key.code {
                     KeyCode::Char('i') => {
                         self.enter_insert_mode()
                     }
@@ -143,7 +144,9 @@ impl App {
                         self.move_cursor_right();
                     }
                     KeyCode::Enter => {
-                        self.word = Stardict::query();
+                        let result = query_word(&self.word_input).await.unwrap_or(Word::default());
+                        self.word = Some(result);
+
                         self.input_mode = Normal;
                         self.reset_input()
                     }

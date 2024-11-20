@@ -1,63 +1,39 @@
+#[allow(dead_code)]
+#[derive(Debug, sqlx::FromRow, Default)]
 pub struct Stardict {
-    pub id: i32,
-    pub word: String,
-    pub sw: String,
-    pub phonetic: String,
-    pub definition: String,
-    pub translation: String,
-    pub pos: String,
-    pub collins: i32,
-    pub oxford: i32,
-    pub tag: String,
-    pub bnc: i32,
-    pub frq: i32,
-    pub exchange: String,
-    pub detail: String,
-    pub audio: String,
+    pub id: i64,
+    pub word: Option<String>,
+    pub sw: Option<String>,
+    pub phonetic: Option<String>,
+    pub definition: Option<String>,
+    pub translation: Option<String>,
+    pub pos: Option<String>,
+    pub collins: Option<i64>,
+    pub oxford: Option<i64>,
+    pub tag: Option<String>,
+    pub bnc: Option<i64>,
+    pub frq: Option<i64>,
+    pub exchange: Option<String>,
+    pub detail: Option<String>,
+    pub audio: Option<String>,
 }
-impl Stardict {
-    pub fn query() -> Option<Word> {
-        let word = Self {
-            id: 2622929,
-            word: "rust".to_string(),
-            sw: "rust".to_string(),
-            phonetic: "rʌst".to_string(),
-            definition: "n. a red or brown oxide coating on iron or steel caused by the action of oxygen and moisture\nn. a plant disease that produces a reddish-brown discoloration of leaves and stems; caused by various rust fungi\nn. the formation of reddish-brown ferric oxides on iron by low-temperature oxidation in the presence of water\nn. any of various fungi causing rust disease in plants".to_string(),
-            translation: "n. 锈, 生锈, 衰退\nvi. 生锈, 衰退\nvt. 使生锈, 腐蚀".to_string(),
-            pos: "v:40/n:60".to_string(),
-            collins: 0,
-            oxford: 0,
-            tag: "cet4 cet6 ky toefl ielts".to_string(),
-            bnc: 0,
-            frq: 0,
-            exchange: "i:rusting/d:rusted/3:rusts/s:rusts/p:rusted".to_string(),
-            detail: "".to_string(),
-            audio: "".to_string(),
-        }.into();
-
-        Some(word)
-    }
-    pub fn not_found() -> Word {
-        Self {
-            id: 0,
-            word: "".to_string(),
-            sw: "".to_string(),
-            phonetic: "".to_string(),
-            definition: "".to_string(),
-            translation: "".to_string(),
-            pos: "".to_string(),
-            collins: 0,
-            oxford: 0,
-            tag: "".to_string(),
-            bnc: 0,
-            frq: 0,
-            exchange: "".to_string(),
-            detail: "".to_string(),
-            audio: "".to_string(),
-        }.into()
-    }
-}
-
+// pub struct Stardict {
+//     // pub id: i64,
+//     pub word: Option<String>,
+//     // pub sw: Option<String>,
+//     pub phonetic: Option<String>,
+//     pub definition: Option<String>,
+//     pub translation: Option<String>,
+//     // pub pos: Option<String>,
+//     // pub collins: Option<i64>,
+//     // pub oxford: Option<i64>,
+//     pub tag: Option<String>,
+//     // pub bnc: Option<i64>,
+//     // pub frq: Option<i64>,
+//     pub exchange: Option<String>,
+//     // pub detail: Option<String>,
+//     // pub audio: Option<String>,
+// }
 
 pub struct Word {
     pub name: String,
@@ -66,14 +42,31 @@ pub struct Word {
     pub tags: String,
     pub exchange: String,
 }
+
+impl Default for Word {
+    fn default() -> Self {
+        Self {
+            name: "".to_string(),
+            translation: "".to_string(),
+            definition: "".to_string(),
+            tags: "".to_string(),
+            exchange: "".to_string(),
+        }
+    }
+}
+
 impl From<Stardict> for Word {
     fn from(value: Stardict) -> Self {
         Self {
-            name: value.word,
-            translation: value.translation,
-            definition: value.definition,
-            tags: parse_tag(&value.tag),
-            exchange: parse_exchange(&value.exchange),
+            name: format!(
+                "{} [{}]",
+                value.word.unwrap_or("".to_string()),
+                value.phonetic.unwrap_or("".to_string())
+            ),
+            translation: value.translation.unwrap_or("".to_string()),
+            definition: value.definition.unwrap_or("".to_string()),
+            tags: parse_tag(&value.tag.unwrap_or("".to_string())),
+            exchange: parse_exchange(&value.exchange.unwrap_or("".to_string())),
         }
     }
 }
@@ -124,17 +117,7 @@ fn parse_exchange(exchange: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::repo::model::{parse_exchange, parse_tag, Stardict};
-
-    #[test]
-    fn test_not_found() {
-        let word = Stardict::not_found();
-        assert_eq!(word.name, "");
-        assert_eq!(word.translation, "");
-        assert_eq!(word.definition, "");
-        assert_eq!(word.tags, "");
-        assert_eq!(word.exchange, "");
-    }
+    use crate::repo::model::{parse_exchange, parse_tag};
 
     #[test]
     fn test_parse_tag() {

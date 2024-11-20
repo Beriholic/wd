@@ -1,5 +1,5 @@
 use crate::app::InputMode;
-use ratatui::layout::{Alignment, Position, Rect};
+use ratatui::layout::{Position, Rect};
 use ratatui::style::{Color, Style, Stylize};
 use ratatui::widgets::{block, Block, BorderType, Borders, Paragraph, Wrap};
 use ratatui::Frame;
@@ -95,5 +95,5 @@ fn rounded_border_block(title: &str) -> Block {
     Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .title(block::Title::from(title).alignment(Alignment::Left))
+        .title(block::Title::from(title))
 }
