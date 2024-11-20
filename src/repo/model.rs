@@ -17,23 +17,6 @@ pub struct Stardict {
     pub detail: Option<String>,
     pub audio: Option<String>,
 }
-// pub struct Stardict {
-//     // pub id: i64,
-//     pub word: Option<String>,
-//     // pub sw: Option<String>,
-//     pub phonetic: Option<String>,
-//     pub definition: Option<String>,
-//     pub translation: Option<String>,
-//     // pub pos: Option<String>,
-//     // pub collins: Option<i64>,
-//     // pub oxford: Option<i64>,
-//     pub tag: Option<String>,
-//     // pub bnc: Option<i64>,
-//     // pub frq: Option<i64>,
-//     pub exchange: Option<String>,
-//     // pub detail: Option<String>,
-//     // pub audio: Option<String>,
-// }
 
 pub struct Word {
     pub name: String,
