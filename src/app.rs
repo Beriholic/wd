@@ -7,9 +7,16 @@ use crossterm::event;
 use crossterm::event::{KeyCode, KeyEventKind};
 use ratatui::{DefaultTerminal, Frame};
 
+#[derive(Copy, Clone)]
 pub enum InputMode {
     Normal,
     Insert,
+}
+
+#[derive(PartialEq, Eq)]
+pub enum AppState {
+    Run,
+    Exit,
 }
 
 pub struct App {
@@ -17,7 +24,7 @@ pub struct App {
     pub word_input: String,
     pub input_cursor_pos: usize,
     pub input_mode: InputMode,
-    pub exit: bool,
+    state: AppState,
 }
 
 
@@ -28,23 +35,27 @@ impl App {
             word_input: String::new(),
             input_mode: Normal,
             input_cursor_pos: 0,
-            exit: false,
+            state: AppState::Run,
         }
     }
 
     pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        while !self.exit {
+        while self.is_run() {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events().await?;
         }
         Ok(())
     }
 
+    fn is_run(&self) -> bool {
+        self.state == AppState::Run
+    }
+
     fn draw(&mut self, frame: &mut Frame) {
         ui::draw_ui(frame, self)
     }
     fn exit(&mut self) {
-        self.exit = true;
+        self.state = AppState::Exit
     }
 
     fn enter_insert_mode(&mut self) {
@@ -144,9 +155,7 @@ impl App {
                         self.move_cursor_right();
                     }
                     KeyCode::Enter => {
-                        let result = query_word(&self.word_input).await.unwrap_or(Word::default());
-                        self.word = Some(result);
-
+                        self.word = query_word(&self.word_input).await.unwrap_or(None);
                         self.input_mode = Normal;
                         self.reset_input()
                     }
