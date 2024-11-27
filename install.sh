@@ -18,7 +18,7 @@ DICT_URL=https://github.com/Beriholic/wd/releases/download/v0.1.1/stardict.zip
 DIR=$HOME/.local/share/wd
 mkdir -p $DIR
 
-donwload_database() {
+download_database() {
     echo "正在下载离线词典数据库"
     # echo "Downloading the offline dictionary database"
 
@@ -41,15 +41,9 @@ if [ -f "$DIR/stardict.db" ]; then
         ;;
     esac
 else
-    donwload_database
+    download_database
 fi
 
 echo "正在安装wd"
-echo "Installing wd"
 
-cargo install --git https://github.com/Beriholic/wd.git
-
-if [ $? -eq 0 ]; then
-    echo "安装成功"
-else
-    echo "安装失败"
+cargo install --git https://github.com/Beriholic/wd.git --force
